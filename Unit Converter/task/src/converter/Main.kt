@@ -1,11 +1,19 @@
 package converter
 
 fun main() {
-    println("""
-        145 centimeters is 1.45 meters
-        2 miles is 3.2187 kilometers
-        5.5 inches is 139.7 millimeters
-        12 degrees Celsius is 53.6 degrees Fahrenheit
-        3 pounds is 1.360776 kilograms
-    """.trimIndent())
+    val units = listOf("km", "kilometer", "kilometers")
+
+    print("Enter a number and a measure: ")
+    val input = readLine()!!.lowercase().split(" ")
+
+    if (units.contains(input[1])) {
+        convertKmToM(input[0].toInt())
+    } else println("Wrong input")
+}
+
+fun convertKmToM(kilometers: Int) {
+    val kmWord = if (kilometers == 1) "kilometer" else "kilometers"
+    val meters = kilometers * 1000
+    val mWord = if (meters == 1) "meter" else "meters"
+    println("$kilometers $kmWord is $meters $mWord")
 }

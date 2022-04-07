@@ -10,80 +10,6 @@ files:
         println("Hello, World!")
     }
   learner_created: false
-- name: test/Authors.kt
-  visible: false
-  text: |
-    import java.io.*
-    import java.util.*
-
-
-    object Authors {
-        fun solve(sin: Scanner, sout: PrintStream) {
-
-            sout.println("Enter a number and a measure: ")
-            val x = sin.nextInt()
-            val measure = sin.next()
-
-            if (measure.toLowerCase() == "kilometer" || measure.toLowerCase() == "kilometers" || measure.toLowerCase() == "km") {
-                if (x == 1) sout.println("$x kilometer is ${x * 1000} meters")
-                else sout.println("$x kilometers is ${x * 1000} meters")
-            }
-            else sout.println("Wrong input")
-        }
-    }
-  learner_created: false
-- name: test/TestCaseHelpers.kt
-  visible: false
-  text: |+
-    import org.hyperskill.hstest.testcase.CheckResult
-    import org.hyperskill.hstest.testcase.TestCase
-    import java.io.ByteArrayOutputStream
-    import java.io.PrintStream
-    import java.util.*
-
-    /** Output based clue. */
-    data class OutputClue(
-            val output: String,
-            /** Do not show correct output and input. */
-            var isPrivate: Boolean = false,
-            /** Optionally you can add the console input. */
-            val input: String? = null
-    )
-
-    /** Default testCase. */
-    fun <T> testCase(attach: T, input: String) = TestCase<T>().apply {
-        setInput(input)
-        setAttach(attach)
-    }
-
-    /** [OutputClue] based testCase. Doesn't mean that lines will be compared by letters!!!*/
-    fun outputCase(input: String, output: String, isPrivate: Boolean = false) =
-            testCase(OutputClue(output, isPrivate, input), input)
-
-
-    /** TestCase, based on authors solution output. */
-    fun authorsCaseFromFun(
-            mainMethod: (Scanner, PrintStream) -> Unit,
-            input: String,
-            isPrivate: Boolean = false
-    ): TestCase<OutputClue> {
-
-        val authorsBytes = ByteArrayOutputStream()
-        mainMethod(Scanner(input), PrintStream(authorsBytes, true))
-        val authors = authorsBytes.toString()
-
-        return testCase(OutputClue(authors, isPrivate, input), input)
-    }
-
-    fun TestCase<OutputClue>.private() = this.apply { attach.isPrivate = true }
-
-    /** Hide error description in private test. */
-    fun CheckResult.ciphered() =
-            if (!isCorrect)
-                CheckResult(false)
-            else CheckResult(true, feedback)
-
-  learner_created: false
 - name: test/WordComparer.kt
   visible: false
   text: "import org.hyperskill.hstest.testcase.CheckResult\nimport java.util.*\nimport\
@@ -156,6 +82,58 @@ files:
     \ - myTokens.size} extra words.\")\n        }\n        return CheckResult.correct()\n\
     \    }\n}\n"
   learner_created: false
+- name: test/TestCaseHelpers.kt
+  visible: false
+  text: |+
+    import org.hyperskill.hstest.testcase.CheckResult
+    import org.hyperskill.hstest.testcase.TestCase
+    import java.io.ByteArrayOutputStream
+    import java.io.PrintStream
+    import java.util.*
+
+    /** Output based clue. */
+    data class OutputClue(
+            val output: String,
+            /** Do not show correct output and input. */
+            var isPrivate: Boolean = false,
+            /** Optionally you can add the console input. */
+            val input: String? = null
+    )
+
+    /** Default testCase. */
+    fun <T> testCase(attach: T, input: String) = TestCase<T>().apply {
+        setInput(input)
+        setAttach(attach)
+    }
+
+    /** [OutputClue] based testCase. Doesn't mean that lines will be compared by letters!!!*/
+    fun outputCase(input: String, output: String, isPrivate: Boolean = false) =
+            testCase(OutputClue(output, isPrivate, input), input)
+
+
+    /** TestCase, based on authors solution output. */
+    fun authorsCaseFromFun(
+            mainMethod: (Scanner, PrintStream) -> Unit,
+            input: String,
+            isPrivate: Boolean = false
+    ): TestCase<OutputClue> {
+
+        val authorsBytes = ByteArrayOutputStream()
+        mainMethod(Scanner(input), PrintStream(authorsBytes, true))
+        val authors = authorsBytes.toString()
+
+        return testCase(OutputClue(authors, isPrivate, input), input)
+    }
+
+    fun TestCase<OutputClue>.private() = this.apply { attach.isPrivate = true }
+
+    /** Hide error description in private test. */
+    fun CheckResult.ciphered() =
+            if (!isCorrect)
+                CheckResult(false)
+            else CheckResult(true, feedback)
+
+  learner_created: false
 - name: test/Task2Test.kt
   visible: false
   text: |
@@ -189,6 +167,31 @@ files:
         }
     }
   learner_created: false
+- name: test/Authors.kt
+  visible: false
+  text: |
+    import java.io.*
+    import java.util.*
+
+
+    object Authors {
+        fun solve(sin: Scanner, sout: PrintStream) {
+
+            sout.println("Enter a number and a measure: ")
+            val x = sin.nextInt()
+            val measure = sin.next()
+
+            if (measure.toLowerCase() == "kilometer" || measure.toLowerCase() == "kilometers" || measure.toLowerCase() == "km") {
+                if (x == 1) sout.println("$x kilometer is ${x * 1000} meters")
+                else sout.println("$x kilometers is ${x * 1000} meters")
+            }
+            else sout.println("Wrong input")
+        }
+    }
+  learner_created: false
 feedback_link: https://hyperskill.org/projects/70/stages/386/implement#comment
-status: Unchecked
+status: Solved
+feedback:
+  message: Congratulations!
+  time: Thu, 07 Apr 2022 19:20:16 UTC
 record: -1

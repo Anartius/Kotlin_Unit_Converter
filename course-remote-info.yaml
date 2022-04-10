@@ -3,7 +3,7 @@ hyperskill_project:
   ide_files: https://stepik.org/media/attachments/lesson/225500/additional_files.json
   is_template_based: false
   use_ide: true
-update_date: Sun, 10 Apr 2022 07:56:01 UTC
+update_date: Sun, 10 Apr 2022 17:56:11 UTC
 stages:
 - id: 385
   step: 6090
@@ -19,7 +19,7 @@ stages:
   is_completed: true
 - id: 389
   step: 6094
-  is_completed: false
+  is_completed: true
 topics:
   0:
   - title: Computer programming

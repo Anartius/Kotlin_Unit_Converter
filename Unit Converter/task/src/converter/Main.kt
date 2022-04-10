@@ -1,251 +1,126 @@
 package converter
 
+enum class Unit(
+    val type: String, val ratio: Double, val short: String,
+    val single: String, val plural: String) {
+
+    WRONG("wrong", 1.0,"???", "???", "???"),
+    METER("Length",1.0, "m", "meter", "meters"),
+    KILOMETER("Length", 1000.0, "km", "kilometer", "kilometers"),
+    CENTIMETER("Length", 0.01, "cm", "centimeter", "centimeters"),
+    MILLIMETER("Length", 0.001, "mm", "millimeter", "millimeters"),
+    MILE("Length", 1609.35, "mi", "mile", "miles"),
+    YARD("Length", 0.9144, "yd", "yard", "yards"),
+    FOOT("Length", 0.3048, "ft", "foot", "feet"),
+    INCH("Length", 0.0254, "in", "inch", "inches"),
+    GRAM("Weight", 1.0, "g", "gram", "grams"),
+    KILOGRAM("Weight",1000.0, "kg", "kilogram", "kilograms"),
+    MILLIGRAM("Weight", 0.001, "mg", "milligram", "milligrams"),
+    POUND("Weight", 453.592, "lb", "pound", "pounds"),
+    OUNCE("Weight", 28.3495, "oz", "ounce", "ounces"),
+    CELSIUS("temperature", 1.0, "c",
+        "degree Celsius", "degrees Celsius"),
+    FAHRENHEIT("temperature", 1.0, "f",
+        "degree Fahrenheit", "degrees Fahrenheit"),
+    KELVIN("temperature", 1.0, "k", "kelvin", "kelvins")
+}
+
+
 fun main() {
-
-    val units = listOf(
-        listOf(
-            listOf("m", "meter", "meters"),
-            listOf("km", "kilometer", "kilometers"),
-            listOf("cm", "centimeter", "centimeters"),
-            listOf("mm", "millimeter", "millimeters"),
-            listOf("mi", "mile", "miles"),
-            listOf("yd", "yard", "yards"),
-            listOf("ft", "foot", "feet"),
-            listOf("in", "inch", "inches")),
-        listOf(
-            listOf("g", "gram", "grams"),
-            listOf("kg", "kilogram", "kilograms"),
-            listOf("mg", "milligram", "milligrams"),
-            listOf("lb", "pound", "pounds"),
-            listOf("oz", "ounce", "ounces"))
-    )
-    val unitType = mutableListOf<String>()
-    var result: Double
-
     while (true) {
         print("Enter what you want to convert (or exit): ")
-        val input = readLine()!!.lowercase().split(" ")
-        if (input.first() == "exit") return
+        val userInput = readLine()!!.lowercase()
+        if (userInput == "exit") return
 
-        try {
-            unitType.addAll(defineInputUnits(input, units))
-        } catch (e: IndexOutOfBoundsException) {
-            println("Wrong input")
+        val input = parseInput(userInput)
+
+        val inputValue = try {
+            if (input.size < 4) {
+                throw NumberFormatException()
+            }
+            input[0].toDouble()
+        } catch (e: NumberFormatException) {
+            println("Parse error\n ")
             continue
         }
 
-        if (conversionIsPossible(unitType, units)) {
-            result = if (unitType[0] == "length") {
-                val meters = convertToMeters(input, units[0], unitType)
-                convertFromMeters(meters, units[0], unitType)
-            } else {
-                val grams = convertToGrams(input, units[1], unitType)
-                convertFromGrams(grams, units[1], unitType)
+        var fromUnit = Unit.WRONG
+        var toUnit = Unit.WRONG
+
+        for (i in Unit.values()) {
+            if (input[1] in listOf(i.short, i.single, i.plural)) {
+                fromUnit = i
             }
-            printResult(input[0].toDouble(), result, units, unitType)
-        }
-
-        unitType.clear()
-    }
-
-}
-
-fun defineInputUnits(
-    input: List<String>,
-    units: List<List<List<String>>>): MutableList<String> {
-
-
-    val unitType = mutableListOf("unknown", "unknown", "", "")
-    var isLength = false
-    var isWeight = false
-
-    var unitPosition = 1
-    for (j in 0..1) {
-        for (i in units[0].indices) {
-            if (units[0][i].contains(input[unitPosition])) {
-                unitType[j] = "length"
-                unitType[j + 2] = i.toString()
-                isLength = true
-                break
-            }
-        }
-        if (!isLength) {
-            for (i in units[1].indices) {
-                if (units[1][i].contains(input[unitPosition])) {
-                    unitType[j] = "weight"
-                    unitType[j + 2] = i.toString()
-                    isWeight = true
-                    break
-                }
+            if (input[3] in listOf(i.short, i.single, i.plural)) {
+                toUnit = i
             }
         }
 
-        if (!(isLength || isWeight)) {
-            unitType[j] = "unknown"
-        }
+        if (fromUnit.type != "wrong"
+            && toUnit.type != "wrong" && fromUnit.type == toUnit.type) {
 
-        isWeight = false
-        isLength = false
-        unitPosition += 2
-    }
-    return unitType
-}
+            if (inputValue < 0 && fromUnit.type != "temperature") {
+                println("${fromUnit.type} shouldn't be negative\n")
+                continue
+            }
 
+            val result: Double = if (toUnit.type == "temperature") {
+                convertTemperature(inputValue, fromUnit, toUnit)
+            } else input[0].toDouble() * fromUnit.ratio / toUnit.ratio
 
-fun conversionIsPossible(
-    unitType: MutableList<String>,
-    units: List<List<List<String>>>): Boolean {
+            println("$inputValue " +
+                    (if (inputValue == 1.0) fromUnit.single else fromUnit.plural) +
+                    " is $result ${if (result == 1.0) toUnit.single else toUnit.plural}\n")
 
-    if (unitType[0] == "unknown" || unitType[1] == "unknown") {
-
-        val firstUnit = if (unitType[0] == "unknown") {
-            "???"
         } else {
-            if (unitType[0] == "length") {
-                units[0][unitType[2].toInt()][2]
-            } else {
-                units[1][unitType[2].toInt()][2]
-            }
+            println("Conversion from ${fromUnit.plural} to ${toUnit.plural} is impossible\n")
         }
+    }
+}
 
-        val secondUnit = if (unitType[1] == "unknown") {
-            "???"
+fun parseInput(input: String): List<String> {
+
+    var isAdded = false
+    val result = mutableListOf<String>()
+    val words = input.replace("dc", "c")
+        .replace("df", "f")
+        .split(" ")
+
+    for (i in words.indices) {
+        if (!isAdded) {
+            if (words[i] == "degree" || words[i] == "degrees") {
+
+                result.add(words[i] + " " +
+                        words[i + 1].first().uppercase() + words[i + 1].drop(1))
+
+                isAdded = true
+            } else result.add(words[i])
         } else {
-            if (unitType[1] == "length") {
-                units[0][unitType[3].toInt()][2]
-            } else {
-                units[1][unitType[3].toInt()][2]
-            }
+            isAdded = false
         }
-        println("Conversion from $firstUnit to $secondUnit is impossible")
-        return false
     }
 
-    if (unitType[1] != "unknown" && (unitType[0] != unitType[1])) {
-        val from = if (unitType[0] == "length") {
-            units[0][unitType[2].toInt()][2]
-        } else units[1][unitType[2].toInt()][2]
-
-        val to = if (unitType[1] == "length") {
-            units[0][unitType[3].toInt()][2]
-        } else units[1][unitType[3].toInt()][2]
-
-        println("Conversion from $from to $to is impossible")
-        return false
+    for (i in result.indices) {
+        if (result[i] == "celsius") result[i] = "c"
+        if (result[i] == "fahrenheit") result[i] = "f"
     }
-    return true
-}
-
-
-fun convertToMeters(input: List<String>,
-                    lengthUnits: List<List<String>>,
-                    unitType: MutableList<String>): Double {
-
-    val value = input[0].toDouble()
-
-    val unit = lengthUnits[unitType[2].toInt()][1]
-    val result: Double = when (unit) {
-        "meter" -> value
-        "kilometer" -> value * 1000
-        "centimeter" -> value * 0.01
-        "millimeter" -> value * 0.001
-        "mile" -> value * 1609.35
-        "yard" -> value * 0.9144
-        "foot" -> value * 0.3048
-        else -> value * 0.0254
-    }
-
-    return result
-}
-
-fun convertFromMeters(
-    length: Double,
-    lengthUnits: List<List<String>>,
-    unitType: MutableList<String>): Double {
-
-    val outputUnit = lengthUnits[unitType[3].toInt()][1]
-    val result: Double = when (outputUnit) {
-        "meter" -> length
-        "kilometer" -> length / 1000
-        "centimeter" -> length / 0.01
-        "millimeter" -> length / 0.001
-        "mile" -> length / 1609.35
-        "yard" -> length / 0.9144
-        "foot" -> length / 0.3048
-        else -> length / 0.0254
-    }
-
     return result
 }
 
 
-fun convertToGrams(
-    input: List<String>,
-    weightUnits: List<List<String>>,
-    unitType: MutableList<String>): Double {
+fun convertTemperature(value: Double, fromUnit: Unit, toUnit: Unit): Double {
 
-    val value = input[0].toDouble()
+    if (fromUnit.short == toUnit.short) return value
 
-    val unit = weightUnits[unitType[2].toInt()][1]
-    val result: Double = when (unit) {
-        "gram" -> value
-        "kilogram" -> value * 1000
-        "milligram" -> value * 0.001
-        "pound" -> value * 453.592
-        else -> value * 28.3495
-    }
-
-    return result
-}
-
-
-fun convertFromGrams(
-    weight: Double,
-    weightUnits: List<List<String>>,
-    unitType: MutableList<String>): Double {
-
-    val outputUnit = weightUnits[unitType[3].toInt()][1]
-    val result: Double = when (outputUnit) {
-        "gram" -> weight
-        "kilogram" -> weight / 1000
-        "milligram" -> weight / 0.001
-        "pound" -> weight / 453.592
-        else -> weight / 28.3495
-    }
-
-    return result
-}
-
-
-fun printResult(
-    inputValue: Double,
-    result: Double,
-    units: List<List<List<String>>>,
-    unitType: MutableList<String>) {
-
-    val inputUnits =
-        if (inputValue == 1.0) {
-            if (unitType[0] == "length") {
-                units[0][unitType[2].toInt()][1]
-            } else units[1][unitType[2].toInt()][1]
-        } else {
-            if (unitType[0] == "length") {
-                units[0][unitType[2].toInt()][2]
-            } else units[1][unitType[2].toInt()][2]
+    return when (fromUnit.short) {
+        "c" -> {
+            if (toUnit.short == "k") { value + 273.15 } else { value * 9 / 5 + 32 }
         }
-
-    val resultUnits =
-        if (result == 1.0) {
-            if (unitType[1] == "length") {
-                units[0][unitType[3].toInt()][1]
-            } else units[1][unitType[3].toInt()][1]
-        } else {
-            if (unitType[1] == "length") {
-                units[0][unitType[3].toInt()][2]
-            } else units[1][unitType[3].toInt()][2]
+        "k" -> {
+            if (toUnit.short == "c") { value - 273.15 } else { value * 9 / 5 - 459.67 }
         }
-
-    println("$inputValue $inputUnits " +
-            "is $result $resultUnits")
-
+        else -> {
+            if (toUnit.short == "c") { (value - 32) * 5 / 9 } else { (value + 459.67) * 5 / 9 }
+        }
+    }
 }
